@@ -183,17 +183,17 @@ function Get-ADObjectACL {
 function Find-VulnerableOU {
 <#
 .SYNOPSIS
-    Finds where a user (and their group memberships) have CreateChild rights in AD.
+    Finds where a user (and their group memberships) have CreateChild rights in AD,
+    returning only container objects (OUs/containers).
 
 .DESCRIPTION
-    This function uses the existing Get-ADObjectACL function to enumerate ACLs, then
-    filters for ACEs where the SecurityIdentifier matches either:
-      - the specified user’s SID, or
-      - any SID of groups the user is a member of (via Get-ADPrincipalGroupMembership)
+    Uses Get-ADObjectACL to enumerate ACEs, filters for:
+      - ACEs where SecurityIdentifier is the user or any of their groups
+      - ActiveDirectoryRights includes CreateChild
+      - The underlying AD object is an organizationalUnit or container
 
-    It then returns only ACEs where ActiveDirectoryRights includes the CreateChild flag.
-    This is useful for identifying where a user (directly or via groups) can create
-    new child objects (e.g., new users, computers, groups) in the directory.
+    This ensures the output represents *places where you can actually create child
+    objects* (OUs/containers), and not leaf objects like users/computers/MSAs.
 
 .PARAMETER Identity
     The user to analyze. Can be:
@@ -204,27 +204,26 @@ function Find-VulnerableOU {
     If omitted, defaults to the current logon user ($env:USERNAME).
 
 .EXAMPLE
-    Get-ADUserCreateChildRights
+    Find-VulnerableOU
 
-    Uses the current user context and returns all AD objects where the user or any
-    of their groups has CreateChild rights.
+    Uses the current user context and returns all OUs/containers where the user or
+    any of their groups has CreateChild rights.
 
 .EXAMPLE
-    Get-ADUserCreateChildRights -Identity "b5null"
+    Find-VulnerableOU -Identity "b5null"
 
     Same as above, but explicitly for the user 'b5null'.
 
 .NOTES
+    Author: B5null
     Requires:
       - RSAT ActiveDirectory module
       - Get-ADObjectACL function already defined in the session
-
 #>
     [CmdletBinding()]
     param(
         [string]$Identity
     )
-
 
     if (-not $Identity) {
         $Identity = $env:USERNAME
@@ -242,7 +241,7 @@ function Find-VulnerableOU {
     # Get all group memberships (transitive) + their SIDs
     $groupSids = @()
     try {
-        $groups = Get-ADPrincipalGroupMembership -Identity $user
+        $groups    = Get-ADPrincipalGroupMembership -Identity $user
         $groupSids = $groups | ForEach-Object { $_.SID.Value }
     }
     catch {
@@ -256,19 +255,49 @@ function Find-VulnerableOU {
     # Use your existing ACL enumerator
     $acls = Get-ADObjectACL
 
-    $acls |
-        Where-Object {
-            $_.SecurityIdentifier -and
-            ($_.SecurityIdentifier -in $principalSids) -and
-            (($_.ActiveDirectoryRights -band [System.DirectoryServices.ActiveDirectoryRights]::CreateChild) -ne 0)
-        } |
-        Select-Object ObjectDN,
-                      IdentityReference,
-                      SecurityIdentifier,
-                      ActiveDirectoryRights,
-                      AccessControlType,
-                      IsInherited
+    # First: filter by SID + CreateChild
+    $candidateAces = $acls | Where-Object {
+        $_.SecurityIdentifier -and
+        ($_.SecurityIdentifier -in $principalSids) -and
+        (($_.ActiveDirectoryRights -band [System.DirectoryServices.ActiveDirectoryRights]::CreateChild) -ne 0)
+    }
+
+    # Now: keep only those whose underlying object is an OU/container
+    $seenDns = @{}
+    foreach ($ace in $candidateAces) {
+        $dn = $ace.ObjectDN
+
+        # avoid repeated lookups for the same DN
+        if ($seenDns.ContainsKey($dn)) {
+            continue
+        }
+
+        try {
+            $obj = Get-ADObject -Identity $dn -Properties objectClass -ErrorAction Stop
+        }
+        catch {
+            Write-Verbose "Failed to resolve object '$dn' while filtering for OU/container: $_"
+            continue
+        }
+
+        # Only keep organizationalUnit or container
+        if ($obj.ObjectClass -ne 'organizationalUnit' -and $obj.ObjectClass -ne 'container') {
+            continue
+        }
+
+        $seenDns[$dn] = $true
+
+        [pscustomobject]@{
+            ObjectDN              = $ace.ObjectDN
+            IdentityReference     = $ace.IdentityReference
+            SecurityIdentifier    = $ace.SecurityIdentifier
+            ActiveDirectoryRights = $ace.ActiveDirectoryRights
+            AccessControlType     = $ace.AccessControlType
+            IsInherited           = $ace.IsInherited
+        }
+    }
 }
+
 
 
 function Add-ADObjectACL {
@@ -307,6 +336,12 @@ function Add-ADObjectACL {
 
 .EXAMPLE
     Add-ADObjectACL -Rights 'All' -TargetIdentity "attacker_dMSA$" -PrincipalIdentity "b5null"
+
+.NOTES
+    Author: B5null
+    Requires:
+      - RSAT ActiveDirectory module
+
 #>
     [CmdletBinding()]
     param(
