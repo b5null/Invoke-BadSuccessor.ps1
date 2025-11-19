@@ -12,13 +12,13 @@ Abuse **Delegated Managed Service Accounts (dMSA)** creation rights on vulnerabl
   - `msDS-ManagedAccountPrecededByLink = <DN>`  
 - Generates **Rubeus-ready** post-exploitation steps (unless `-Quiet` is used)
 
-This attack chain enables abusing dMSA behavior to escalate privileges by forging tickets using machine account credentials and requesting TGS for the service account.
+This attack chain enables abusing dMSA behavior to escalate privileges by exploiting weak OU permissions, using machine account credentials and requesting TGS for the service account.
 
 ---
 
 ## Features
 - Fully automated dMSA privilege escalation chain  
-- Stealth mode (`-Stealth`) to suppress post-exploitation tips  
+- Quiet mode (`-Quiet`) to suppress post-exploitation tips  
 - Smart identity resolution for PrecededBy targets
 - Handles all edge cases (existing machine/MSA, bad DN, misconfigurations)  
 - Works **purely with the AD PowerShell module** — no external dependencies
