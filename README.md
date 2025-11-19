@@ -12,7 +12,7 @@ Abuse **Delegated Managed Service Accounts (dMSA)** creation rights on vulnerabl
   - `msDS-ManagedAccountPrecededByLink = <DN>`  
 - Generates **Rubeus-ready** post-exploitation steps (unless `-Quiet` is used)
 
-This attack chain enables abusing dMSA behavior to escalate privileges by exploiting weak OU permissions, using machine account credentials and requesting TGS for the service account.
+This attack chain enables abusing dMSA behavior to escalate privileges by forging tickets using machine account credentials and requesting TGS for the service account with the msDS-ManagedAccountPrecededByLink privileges.
 
 ---
 
