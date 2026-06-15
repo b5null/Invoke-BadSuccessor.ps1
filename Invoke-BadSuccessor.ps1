@@ -644,19 +644,13 @@ function Invoke-BadSuccessor {
     # 5. Resolve PrecededBy identity
     Write-Verbose "[*] Resolving PrecededByIdentity..."
     $precededObject = $null
-
     if ($PrecededByIdentity) {
         try { $precededObject = Get-ADObject -Identity $PrecededByIdentity -ErrorAction Stop } catch {}
         if (-not $precededObject) {
             $domainDn = (Get-ADDomain).DistinguishedName
-            $bases = @("CN=Users,$domainDn","CN=Computers,$domainDn",$domainDn)
-            foreach ($b in $bases) {
-                if (-not $precededObject) {
-                    try {
-                        $precededObject = Get-ADObject -LDAPFilter "(&(objectClass=*)(sAMAccountName=$PrecededByIdentity))" -SearchBase $b -ErrorAction Stop
-                    } catch {}
-                }
-            }
+            $precededObject = Get-ADObject -LDAPFilter "(sAMAccountName=$PrecededByIdentity)" `
+                                           -SearchBase $domainDn -SearchScope Subtree `
+                                           -ErrorAction SilentlyContinue | Select-Object -First 1
         }
         if (-not $precededObject) { Write-Warning "[!] Failed to resolve PrecededByIdentity."; return }
     }
